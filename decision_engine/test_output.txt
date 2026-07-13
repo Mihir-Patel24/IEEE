@@ -1,0 +1,96 @@
+﻿
+====================================================================
+  DECISION FUSION ENGINE ΓÇö INTEGRATION TEST
+  3 Scenarios ├ù All 14 Output Fields
+====================================================================
+
+  ==================================================================
+  SCENARIO A ΓÇö CRITICAL (Both Models Flag Failure)
+  ==================================================================
+    overall_risk                  : 90.7
+    overall_status                : Critical
+    maintenance_priority          : Immediate
+    overall_machine_status        : Shutdown Required
+    tool_health                   : 18.0
+    machine_health                : 3.5
+    tool_wear                     : 0.412
+    remaining_useful_life         : 7.2
+    failure_probability           : 96.5
+    failure_type                  : PWF
+    failure_type_confidence       : 98.7
+    components_to_inspect         : Motor, Power Supply, Electrical Wiring, Cutting Tool, Tool Holder, Tool Clamp
+    recommended_actions           : STOP MACHINE IMMEDIATELY, Tool RUL is CRITICAL (7.2 min) ΓÇö Stop and Replace Tool NOW, Replace Cutting Tool Immediately, Stop Machine, Do NOT restart until full inspection is complete, Inspect Motor and Power Supply, Check Electrical Wiring Connections, Measure Input Voltage and Current Draw, Inspect Motor, Call Maintenance Engineer
+    estimated_downtime            : 4+ Hours
+    estimated_cost_saving         : Rs. 30,000
+    next_maintenance              : Immediately
+
+  OPERATOR SUMMARY:
+    MACHINE IS APPROACHING FAILURE ΓÇö IMMEDIATE ACTION REQUIRED.
+    
+    Key indicators:
+      - Failure probability is critically high at 96.5%.
+      - Tool health is critically low at 18.0%.
+      - Remaining Useful Life is only 7.2 min ΓÇö tool is near end of life.
+      - PWF has been detected by machine sensors.
+    
+    IMMEDIATE maintenance is required. Stop the machine now.
+
+  ==================================================================
+  SCENARIO B ΓÇö WARNING (Tool Degrading, Machine Still OK)
+  ==================================================================
+    overall_risk                  : 36.6
+    overall_status                : Warning
+    maintenance_priority          : Medium
+    overall_machine_status        : Operating with Risk
+    tool_health                   : 55.0
+    machine_health                : 69.0
+    tool_wear                     : 0.195
+    remaining_useful_life         : 28.0
+    failure_probability           : 31.0
+    failure_type                  : No Failure
+    failure_type_confidence       : 72.0
+    components_to_inspect         : Cutting Tool, Tool Holder, Tool Clamp
+    recommended_actions           : Schedule Tool Replacement Within This Shift, Reduce Machine Load and Monitor Sensors Closely, Schedule Maintenance ΓÇö Next 8 Hours, Tool RUL is 28.0 min ΓÇö Plan Tool Change Within This Shift, Reduce load, Monitor sensors
+    estimated_downtime            : 1 Hour
+    estimated_cost_saving         : Rs. 5,000
+    next_maintenance              : Within 8 Hours
+
+  OPERATOR SUMMARY:
+    Machine is showing early signs of degradation.
+    
+    Key indicators:
+      - Failure probability is elevated at 31.0%.
+      - Tool health is degraded at 55.0%.
+      - Remaining Useful Life is 28.0 min ΓÇö approaching end of life.
+    
+    Schedule maintenance within the next shift.
+
+  ==================================================================
+  SCENARIO C ΓÇö HEALTHY (Normal Operation)
+  ==================================================================
+    overall_risk                  : 3.9
+    overall_status                : Healthy
+    maintenance_priority          : Low
+    overall_machine_status        : Running Normally
+    tool_health                   : 92.0
+    machine_health                : 98.8
+    tool_wear                     : 0.048
+    remaining_useful_life         : 210.0
+    failure_probability           : 1.2
+    failure_type                  : No Failure
+    failure_type_confidence       : 99.0
+    components_to_inspect         : No components flagged ΓÇö Routine Check
+    recommended_actions           : Monitor Normally ΓÇö Next Scheduled Maintenance, Continue Production
+    estimated_downtime            : 0 Hours
+    estimated_cost_saving         : Rs. 0
+    next_maintenance              : Next Scheduled (24h)
+
+  OPERATOR SUMMARY:
+    Machine is operating within normal parameters.
+    
+    No immediate action needed. Continue standard monitoring.
+
+====================================================================
+  [PASS] DecisionFusionEngine verified on all 3 scenarios.
+====================================================================
+
