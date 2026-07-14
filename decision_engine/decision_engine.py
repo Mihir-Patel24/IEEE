@@ -25,17 +25,26 @@ Version : 1.0
 from __future__ import annotations
 from typing import Any
 
-from config import FusionConfig, DEFAULT_CONFIG
-from utils  import normalise_nasa_output, normalise_ai4i_output, status_to_machine_status
-from fusion import (
-    compute_risk_score,
-    compute_overall_status,
-    compute_priority,
-    generate_actions,
-    compute_components,
-    compute_business_insights,
-    generate_operator_summary,
-)
+try:
+    from .config import FusionConfig, DEFAULT_CONFIG
+    from .utils import normalise_nasa_output, normalise_ai4i_output, status_to_machine_status
+    from .fusion import (
+        compute_risk_score,
+        compute_overall_status,
+        compute_priority,
+        compute_risk_breakdown,
+    )
+    from .recommendation import RecommendationEngine
+except ImportError:  # pragma: no cover - fallback for direct script execution
+    from config import FusionConfig, DEFAULT_CONFIG
+    from utils import normalise_nasa_output, normalise_ai4i_output, status_to_machine_status
+    from fusion import (
+        compute_risk_score,
+        compute_overall_status,
+        compute_priority,
+        compute_risk_breakdown,
+    )
+    from recommendation import RecommendationEngine
 
 
 class DecisionFusionEngine:
@@ -110,6 +119,7 @@ class DecisionFusionEngine:
             engine = DecisionFusionEngine(config=cfg)
         """
         self.config = config or DEFAULT_CONFIG
+        self.recommendation_engine = RecommendationEngine(config=self.config)
 
     # ─────────────────────────────────────────────────────────────────────────
     #  PUBLIC API
@@ -200,70 +210,22 @@ class DecisionFusionEngine:
             config=cfg,
         )
 
-        # ── Step 5: Generate recommended actions ──────────────────────────────
-        actions = generate_actions(
-            overall_status=overall_status,
+        risk_breakdown = compute_risk_breakdown(
             failure_prob=ai4i['failure_prob'],
             tool_health=nasa['tool_health'],
             rul=nasa['rul'],
-            failure_type=ai4i['failure_type'],
-            machine_failure=ai4i['machine_failure'],
-            nasa_action=nasa['nasa_action'],
-            ai4i_recs=ai4i['ai4i_recs'],
+            tool_wear=nasa['tool_wear'],
+            severity=ai4i['severity'],
+            overall_risk=risk_score,
             config=cfg,
         )
 
-        # ── Step 6: Components to inspect ────────────────────────────────────
-        components = compute_components(
-            failure_type=ai4i['failure_type'],
-            tool_health=nasa['tool_health'],
-            ai4i_components=ai4i['components'],
-            config=cfg,
-        )
-
-        # ── Step 7: Business insights ─────────────────────────────────────────
-        business = compute_business_insights(overall_status, config=cfg)
-
-        # ── Step 8: Operator summary ──────────────────────────────────────────
-        summary = generate_operator_summary(
-            overall_status=overall_status,
-            failure_prob=ai4i['failure_prob'],
-            tool_health=nasa['tool_health'],
-            rul=nasa['rul'],
-            failure_type=ai4i['failure_type'],
-            machine_failure=ai4i['machine_failure'],
-            priority=priority,
-            config=cfg,
-        )
-
-        # ── Step 9: Assemble final output dict ───────────────────────────────
         return {
-            # Fused risk
-            "overall_risk":           round(risk_score, 1),
-            "overall_status":         overall_status,
-            "maintenance_priority":   priority,
+            "overall_risk": round(risk_score, 1),
+            "overall_status": overall_status,
+            "maintenance_priority": priority,
             "overall_machine_status": status_to_machine_status(overall_status),
-
-            # Raw signals
-            "tool_health":            nasa['tool_health'],
-            "machine_health":         round(ai4i['machine_health'], 1),
-            "tool_wear":              nasa['tool_wear'],
-            "remaining_useful_life":  nasa['rul'],
-            "failure_probability":    round(ai4i['failure_prob'], 1),
-            "failure_type":           ai4i['failure_type'],
-            "failure_type_confidence": round(ai4i['fail_confidence'], 1),
-
-            # Actionable
-            "components_to_inspect":  components,
-            "recommended_actions":    actions,
-
-            # Business
-            "estimated_downtime":     business["estimated_downtime"],
-            "estimated_cost_saving":  business["estimated_cost_saving"],
-            "next_maintenance":       business["next_maintenance"],
-
-            # Summary
-            "operator_summary":       summary,
+            "risk_breakdown": risk_breakdown,
         }
 
     # ─────────────────────────────────────────────────────────────────────────

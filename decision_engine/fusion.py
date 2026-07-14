@@ -20,11 +20,18 @@ Version : 1.0
 from __future__ import annotations
 from typing import Any
 
-from config import FusionConfig, DEFAULT_CONFIG
-from utils  import (
-    clamp, risk_to_status, status_to_machine_status, status_to_priority,
-    merge_unique, sort_by_priority,
-)
+try:
+    from .config import FusionConfig, DEFAULT_CONFIG
+    from .utils import (
+        clamp, risk_to_status, status_to_machine_status, status_to_priority,
+        merge_unique, sort_by_priority,
+    )
+except ImportError:  # pragma: no cover - fallback for direct script execution
+    from config import FusionConfig, DEFAULT_CONFIG
+    from utils import (
+        clamp, risk_to_status, status_to_machine_status, status_to_priority,
+        merge_unique, sort_by_priority,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -136,6 +143,50 @@ def compute_priority(
         return "Immediate"
 
     return status_to_priority(overall_status)
+
+
+def compute_risk_breakdown(
+    failure_prob:   float,
+    tool_health:    float,
+    rul:            float,
+    tool_wear:      float,
+    severity:       str,
+    overall_risk:   float | None = None,
+    config:         FusionConfig = DEFAULT_CONFIG,
+) -> dict[str, float]:
+    """Break the fused risk into explainable sub-scores."""
+    overall = overall_risk if overall_risk is not None else compute_risk_score(
+        failure_prob=failure_prob,
+        tool_health=tool_health,
+        config=config,
+    )
+
+    fp_component = clamp(failure_prob, 0.0, 100.0) * config.weights.w_failure_prob
+    health_component = clamp(100.0 - tool_health, 0.0, 100.0) * config.weights.w_tool_health
+    rul_component = clamp(max(0.0, (60.0 - max(rul, 0.0)) / 60.0) * 100.0, 0.0, 100.0) * 0.12
+    wear_component = clamp(max(0.0, tool_wear / max(0.3, tool_wear or 0.3)) * 100.0, 0.0, 100.0) * 0.06
+
+    severity_map = {"Healthy": 0.0, "Warning": 18.0, "High Risk": 36.0, "Critical": 54.0}
+    severity_component = severity_map.get(severity, 0.0) * 0.03
+
+    raw_total = fp_component + health_component + rul_component + wear_component + severity_component
+    if raw_total <= 0.0:
+        return {
+            "failure_probability": 0.0,
+            "tool_health": 0.0,
+            "rul": 0.0,
+            "tool_wear": 0.0,
+            "severity": 0.0,
+        }
+
+    scale = overall / raw_total
+    return {
+        "failure_probability": round(fp_component * scale, 1),
+        "tool_health": round(health_component * scale, 1),
+        "rul": round(rul_component * scale, 1),
+        "tool_wear": round(wear_component * scale, 1),
+        "severity": round(severity_component * scale, 1),
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────

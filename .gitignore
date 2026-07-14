@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Environment secrets (NEVER commit these)
+.env
+.streamlit/secrets.toml
+
+# Database (local only)
+*.db
+*.sqlite3
+dashboard/industrialmaint.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Test / build artifacts
+htmlcov/
+.coverage
+.tox/
+.cache/
+coverage.xml
+
+# Temporary scripts
+flatten_project.py
+reorganize.py
+fix_components.py
+
+# Large data files (use Git LFS for these in production)
+# mill.mat
