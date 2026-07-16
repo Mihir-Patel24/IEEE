@@ -56,6 +56,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     # Machine registry
     "register_machine":      {"Admin", "Plant Manager", "Maintenance Engineer"},
     "delete_machine":        {"Admin", "Plant Manager"},
+    # Reports — scheduled generation
+    "generate_scheduled_report": {"Admin", "Plant Manager"},
 }
 
 # ── Role display metadata ─────────────────────────────────────────
