@@ -36,7 +36,8 @@ class AppConfig:
     secret_key: str = field(default_factory=lambda: os.getenv(
         "SECRET_KEY", "industrialmaint-secret-key-change-in-production"
     ))
-    session_timeout_hours: int = 24
+    session_timeout_hours:            int = field(default_factory=lambda: int(os.getenv("SESSION_TIMEOUT_HOURS", "24")))
+    password_reset_token_expiry_hours: int = field(default_factory=lambda: int(os.getenv("PW_RESET_EXPIRY_HOURS", "1")))
 
     # ── Feature Flags ──────────────────────────────────────────────
     use_supabase:     bool = field(default_factory=lambda: bool(os.getenv("SUPABASE_URL")))
