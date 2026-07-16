@@ -325,14 +325,15 @@ if pred.get("failure_risk", 0) >= 60 and pred.get("machine_status", "") == "Crit
 now      = datetime.now().strftime("%d %b %Y · %H:%M")
 n_alerts = len(st.session_state.alerts)
 page_sub = {
-    "Dashboard":      "Operations Control Center",
-    "Machine Health": "Fleet Status & Sensor Monitoring",
-    "Predictions":    "AI-Powered Failure Prediction Engine",
-    "Maintenance":    "Maintenance Planning & Scheduling",
-    "Reports":        "Prediction History & Analytics",
-    "Cost Analysis":  "Business Impact & ROI Calculator",
-    "Profile":        "User Account & Activity",
-    "Settings":       "System Configuration",
+    "Dashboard":        "Operations Control Center",
+    "Machine Health":   "Fleet Status & Sensor Monitoring",
+    "Predictions":      "AI-Powered Failure Prediction Engine",
+    "Machine Registry": "Fleet Registry & Machine Management",
+    "Maintenance":      "Maintenance Planning & Scheduling",
+    "Reports":          "Prediction History & Analytics",
+    "Cost Analysis":    "Business Impact & ROI Calculator",
+    "Profile":          "User Account & Activity",
+    "Settings":         "System Configuration",
 }.get(st.session_state.page, "")
 
 alert_badge = (

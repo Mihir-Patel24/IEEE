@@ -102,6 +102,26 @@ This project implements a **Hybrid AI-Based Predictive Maintenance Framework** t
 - Cost & ROI calculator
 - Maintenance Gantt timeline
 
+### 🗂 Machine Registry (Phase 3)
+| Feature | Notes |
+|---|---|
+| Register machines | Machine ID, name, type, material, factory, location |
+| Edit inline | All fields editable per-row |
+| Status toggle | Active / Idle / Maintenance / Offline (live update) |
+| Delete with confirm | Role-guarded: Admin & Plant Manager only |
+| Fleet KPI cards | Total / Active / In Maintenance / Offline counts |
+| Audit trail | Every change logged to `audit_logs` |
+
+### 🗄 Database (Phase 3)
+| Feature | Notes |
+|---|---|
+| SQLite local mode | Zero-config, auto-init tables |
+| Supabase PostgreSQL | Set `SUPABASE_URL` env var to switch |
+| Schema migration | `database/supabase_schema.sql` — run in Supabase SQL Editor |
+| Row Level Security | All 7 tables have RLS; users see only their data |
+| Helper views | `v_user_prediction_stats`, `v_user_alert_summary` |
+| DB health indicator | Mode + prediction/machine counts shown in sidebar |
+
 ### 🔐 Authentication & Security
 | Feature | Status | Notes |
 |---|---|---|
@@ -151,7 +171,11 @@ Hybrid-AI-Based-Predictive-Maintenance-Framework/
 │       ├── settings.py         # Platform settings (RBAC-aware)
 │       ├── login.py            # Enterprise login page
 │       ├── register.py         # User registration
-│       └── forgot_password.py  # Token-based password reset
+│       ├── forgot_password.py  # Token-based password reset
+│       └── machine_registry.py # Fleet Registry CRUD (Phase 3)
+│
+├── database/                   # Schema & migrations
+│   └── supabase_schema.sql     # PostgreSQL schema with RLS (Phase 3)
 │
 ├── services/                   # ML inference services
 │   ├── prediction_service.py   # Main orchestrator
