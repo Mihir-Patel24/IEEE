@@ -184,15 +184,21 @@ PAGES_ALL = [
 
 # ── AUTH GATE ─────────────────────────────────────────────────────
 if not auth.is_authenticated():
-    # Show login/register pages (no sidebar)
+    # Show login / register / forgot-password pages (no sidebar)
     auth_page = st.session_state.get("auth_page", "login")
-    if auth_page == "login":
-        from views.login import render as render_login
-        render_login()
-    else:
+    if auth_page == "forgot_password":
+        from views.forgot_password import render as render_forgot
+        render_forgot()
+    elif auth_page == "register":
         from views.register import render as render_register
         render_register()
+    else:  # default: login
+        from views.login import render as render_login
+        render_login()
     st.stop()
+
+# ── Session timeout check (runs on every authenticated page load) ──
+auth.enforce_session_timeout()
 
 # ── SIDEBAR ───────────────────────────────────────────────────────
 user     = auth.current_user()

@@ -161,16 +161,9 @@ def render() -> None:
             )
             st.markdown('<div style="height:4px"></div>', unsafe_allow_html=True)
 
-            c_rem, c_forg = st.columns([1, 1])
+            c_rem, _ = st.columns([1, 1])
             with c_rem:
                 st.checkbox("Remember me", key="login_remember")
-            with c_forg:
-                st.markdown(
-                    '<div style="text-align:right;padding-top:6px">'
-                    '<span style="font-size:12px;color:#2563EB;cursor:pointer">'
-                    'Forgot password?</span></div>',
-                    unsafe_allow_html=True,
-                )
 
             st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
             submitted = st.form_submit_button(
@@ -178,6 +171,19 @@ def render() -> None:
                 use_container_width=True,
                 type="primary",
             )
+
+        # Forgot password link (must be outside the form)
+        _, c_forg = st.columns([2, 1])
+        with c_forg:
+            if st.button(
+                "Forgot password?",
+                key="btn_forgot_pw",
+                help="Reset your account password",
+            ):
+                st.session_state.auth_page = "forgot_password"
+                for k in ["_fp_step", "_fp_token_hint", "_fp_email"]:
+                    st.session_state.pop(k, None)
+                st.rerun()
 
         if submitted:
             if not email or not password:
