@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from auth.auth_service import auth
 from database.db_client import db
-from components import spacer, section_header, status_badge
+from components import spacer, section_header, status_badge, section_title
+from auth.rbac   import role_badge_html, ROLE_META
 
 
 def render() -> None:
@@ -205,3 +206,116 @@ def render() -> None:
                     unsafe_allow_html=True,
                 )
         st.markdown("</tbody></table></div>", unsafe_allow_html=True)
+
+    spacer(20)
+
+    # ── Change Password + Security Info ───────────────────────────
+    col_pw, col_security = st.columns([2, 3])
+
+    with col_pw:
+        section_title("Change Password")
+        st.markdown(
+            '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;'
+            'padding:22px 22px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">',
+            unsafe_allow_html=True,
+        )
+        is_demo = uid == "demo-user-0000"
+        if is_demo:
+            st.markdown(
+                '<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;'
+                'padding:10px 14px;font-size:12px;color:#92400E">'
+                '⚠️ Password changes are disabled in Demo Mode.</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            with st.form("change_pw_form"):
+                cur_pw  = st.text_input("Current Password",  type="password", key="cpw_cur")
+                new_pw  = st.text_input("New Password",      type="password",
+                                        placeholder="Minimum 6 characters", key="cpw_new")
+                cnf_pw  = st.text_input("Confirm New Password", type="password", key="cpw_cnf")
+
+                # Live strength bar
+                if new_pw:
+                    pct   = min(int(len(new_pw) / 12 * 100), 100)
+                    col   = "#DC2626" if len(new_pw) < 6 else "#F59E0B" if len(new_pw) < 10 else "#16A34A"
+                    label = "Weak"   if len(new_pw) < 6 else "Fair"   if len(new_pw) < 10 else "Strong"
+                    st.markdown(
+                        f'<div style="margin:2px 0 8px">'
+                        f'<div style="font-size:11px;color:{col};margin-bottom:3px">'
+                        f'Strength: {label}</div>'
+                        f'<div style="background:#E2E8F0;border-radius:999px;height:4px">'
+                        f'<div style="width:{pct}%;background:{col};'
+                        f'border-radius:999px;height:4px"></div></div></div>',
+                        unsafe_allow_html=True,
+                    )
+
+                submitted_pw = st.form_submit_button(
+                    "Update Password", type="primary", use_container_width=True
+                )
+
+            if submitted_pw:
+                if not cur_pw or not new_pw or not cnf_pw:
+                    st.error("All fields are required.")
+                elif len(new_pw) < 6:
+                    st.error("New password must be at least 6 characters.")
+                elif new_pw != cnf_pw:
+                    st.error("Passwords do not match.")
+                else:
+                    # Verify current password
+                    verified = db.verify_password(email, cur_pw)
+                    if not verified:
+                        st.error("⚠️ Current password is incorrect.")
+                    else:
+                        # Generate a one-time token and immediately use it
+                        token = db.create_password_reset_token(email)
+                        if token and db.reset_password_with_token(token, new_pw):
+                            db.log_audit(uid, "password_changed", "Password changed via profile")
+                            st.success("✅ Password updated successfully.")
+                        else:
+                            st.error("Failed to update password. Please try again.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_security:
+        section_title("Account & Security")
+        role_meta = ROLE_META.get(role, ROLE_META["Operator"])
+        st.markdown(
+            f'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;'
+            f'padding:22px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
+
+            # Role
+            f'<div style="margin-bottom:18px">'
+            f'<div style="font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;'
+            f'letter-spacing:.06em;margin-bottom:6px">Access Level</div>'
+            f'{role_badge_html(role)}</div>'
+
+            # Permissions summary
+            f'<div style="margin-bottom:18px">'
+            f'<div style="font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;'
+            f'letter-spacing:.06em;margin-bottom:6px">Role Description</div>'
+            f'<div style="font-size:13px;color:#374151">{role_meta["desc"]}</div></div>'
+
+            # Account info grid
+            f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;'
+            f'border-top:1px solid #F3F4F6;padding-top:16px">'
+
+            f'<div><div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;'
+            f'letter-spacing:.06em;margin-bottom:3px">Account Created</div>'
+            f'<div style="font-size:13px;font-weight:600;color:#111827">{created}</div></div>'
+
+            f'<div><div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;'
+            f'letter-spacing:.06em;margin-bottom:3px">Last Login</div>'
+            f'<div style="font-size:13px;font-weight:600;color:#111827">{last_login}</div></div>'
+
+            f'<div><div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;'
+            f'letter-spacing:.06em;margin-bottom:3px">Session Timeout</div>'
+            f'<div style="font-size:13px;font-weight:600;color:#111827">24 hours</div></div>'
+
+            f'<div><div style="font-size:11px;color:#9CA3AF;text-transform:uppercase;'
+            f'letter-spacing:.06em;margin-bottom:3px">Auth Mode</div>'
+            f'<div style="font-size:13px;font-weight:600;color:#111827">'
+            f'{"Supabase" if __import__("config.settings", fromlist=["settings"]).settings.is_supabase_configured else "Local SQLite"}'
+            f'</div></div>'
+
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )

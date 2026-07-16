@@ -123,6 +123,16 @@ def _init_sqlite() -> None:
             ip_address TEXT DEFAULT '',
             created_at TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            id         TEXT PRIMARY KEY,
+            user_id    TEXT NOT NULL,
+            email      TEXT NOT NULL,
+            token      TEXT UNIQUE NOT NULL,
+            used       INTEGER DEFAULT 0,
+            expires_at TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
     """)
     conn.commit()
     conn.close()
@@ -410,6 +420,103 @@ class DatabaseClient:
         )
         conn.commit()
         conn.close()
+
+    # ── Password Reset Tokens ─────────────────────────────────────
+
+    def create_password_reset_token(self, email: str) -> str | None:
+        """
+        Generate a secure reset token for *email*.
+        Returns the token string (shown in demo mode), or None if email not found.
+        Tokens expire after settings.password_reset_token_expiry_hours (default 1h).
+        """
+        import secrets
+        from datetime import timedelta
+
+        user = self.get_user_by_email(email)
+        if not user:
+            return None
+
+        token      = secrets.token_urlsafe(32)
+        uid        = user["id"]
+        now        = _now()
+        expiry_hrs = getattr(settings, "password_reset_token_expiry_hours", 1)
+        expires_at = (
+            datetime.now(timezone.utc) + timedelta(hours=expiry_hrs)
+        ).isoformat()
+
+        row = {
+            "id":         str(uuid.uuid4()),
+            "user_id":    uid,
+            "email":      email,
+            "token":      token,
+            "used":       0,
+            "expires_at": expires_at,
+            "created_at": now,
+        }
+
+        if _supabase:
+            _supabase.table("password_reset_tokens").insert(row).execute()
+        else:
+            conn = _get_conn()
+            conn.execute(
+                """INSERT INTO password_reset_tokens
+                   (id,user_id,email,token,used,expires_at,created_at)
+                   VALUES (?,?,?,?,?,?,?)""",
+                [row["id"], row["user_id"], row["email"], row["token"],
+                 row["used"], row["expires_at"], row["created_at"]],
+            )
+            conn.commit()
+            conn.close()
+
+        self.log_audit(uid, "password_reset_request", f"Reset token created for {email}")
+        return token
+
+    def reset_password_with_token(self, token: str, new_password: str) -> bool:
+        """
+        Validate *token* and update the user's password.
+        Returns True on success, False on invalid/expired/used token.
+        """
+        now = datetime.now(timezone.utc).isoformat()
+
+        if _supabase:
+            res = (
+                _supabase.table("password_reset_tokens")
+                .select("*").eq("token", token).eq("used", 0).execute()
+            )
+            rows = res.data or []
+        else:
+            conn = _get_conn()
+            rows = _rows_to_list(
+                conn.execute(
+                    "SELECT * FROM password_reset_tokens WHERE token=? AND used=0",
+                    (token,)
+                ).fetchall()
+            )
+            conn.close()
+
+        if not rows:
+            return False
+
+        rec = rows[0]
+        if rec["expires_at"] < now:
+            return False   # expired
+
+        uid       = rec["user_id"]
+        new_hash  = _hash_password(new_password)
+
+        # Update password
+        if _supabase:
+            _supabase.table("users").update({"password_hash": new_hash}).eq("id", uid).execute()
+            _supabase.table("password_reset_tokens").update({"used": 1}).eq("token", token).execute()
+        else:
+            conn = _get_conn()
+            conn.execute("UPDATE users SET password_hash=? WHERE id=?", (new_hash, uid))
+            conn.execute("UPDATE password_reset_tokens SET used=1 WHERE token=?", (token,))
+            conn.commit()
+            conn.close()
+
+        self.log_audit(uid, "password_reset_complete", "Password updated via reset token")
+        return True
 
 
 db = DatabaseClient()

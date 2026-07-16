@@ -5,7 +5,9 @@ import streamlit as st
 import sys, os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from components import kpi_card, spacer
+from components import kpi_card, spacer, section_title
+from auth.auth_service import auth
+from auth.rbac        import has_permission, role_badge_html
 
 _SLATE  = "#1e293b"
 _GRAY   = "#64748b"
@@ -28,7 +30,28 @@ def _section(title: str) -> None:
 
 
 def render():
-    cfg = st.session_state.settings
+    cfg  = st.session_state.settings
+    role = auth.user_role()
+
+    # Role badge + access indicator
+    can_edit = has_permission("edit_settings")
+    st.markdown(
+        f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'
+        f'{role_badge_html(role)}'
+        f'<span style="font-size:12px;color:#6B7280">'
+        f'{"Full settings access" if can_edit else "Read-only access — contact Plant Manager or Admin to modify settings."}'
+        f'</span></div>',
+        unsafe_allow_html=True,
+    )
+
+    if not can_edit:
+        st.markdown(
+            '<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;'
+            'padding:12px 16px;margin-bottom:20px;font-size:13px;color:#92400E">'
+            '<b>Read-Only Mode.</b> Your role (<b>Operator</b>) can view but not modify '
+            'system settings. Contact your Plant Manager or Admin for changes.</div>',
+            unsafe_allow_html=True,
+        )
 
     # ── ROW 1: Thresholds + Notifications ────────────────────────
     col_thresh, col_notif = st.columns(2)
@@ -187,8 +210,8 @@ def render():
 
     spacer(16)
 
-    # ── System Info ───────────────────────────────────────────────
-    st.markdown('<div class="page-section-title">SYSTEM INFORMATION</div>', unsafe_allow_html=True)
+    # System Information
+    section_title("System Information")
     st.markdown(
         f'<div style="background:{_WHITE};border:1px solid {_BORDER};border-radius:8px;padding:18px 20px">'
         f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">',
@@ -210,3 +233,52 @@ def render():
             unsafe_allow_html=True,
         )
     st.markdown("</div></div>", unsafe_allow_html=True)
+
+    # Admin Panel — only visible to Admin role
+    if has_permission("view_admin"):
+        spacer(20)
+        section_title("Admin Panel")
+        st.markdown(
+            '<div style="background:linear-gradient(135deg,#1E3A5F,#1D4ED8);'
+            'border-radius:14px;padding:24px 28px;color:#fff">'
+
+            '<div style="font-size:16px;font-weight:700;margin-bottom:4px">'
+            'System Administration</div>'
+            '<div style="font-size:12px;color:#93C5FD;margin-bottom:20px">'
+            'This panel is visible to Admin users only.</div>'
+
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">'
+
+            '<div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:16px">'
+            '<div style="font-size:11px;color:#93C5FD;text-transform:uppercase;'
+            'letter-spacing:.06em;margin-bottom:6px">Database</div>'
+            '<div style="font-size:15px;font-weight:700">SQLite / Supabase</div>'
+            '<div style="font-size:11px;color:#BFDBFE;margin-top:4px">Dual-mode, auto-detect</div>'
+            '</div>'
+
+            '<div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:16px">'
+            '<div style="font-size:11px;color:#93C5FD;text-transform:uppercase;'
+            'letter-spacing:.06em;margin-bottom:6px">Auth Mode</div>'
+            '<div style="font-size:15px;font-weight:700">Local / Supabase</div>'
+            '<div style="font-size:11px;color:#BFDBFE;margin-top:4px">Set SUPABASE_URL to switch</div>'
+            '</div>'
+
+            '<div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:16px">'
+            '<div style="font-size:11px;color:#93C5FD;text-transform:uppercase;'
+            'letter-spacing:.06em;margin-bottom:6px">Session Timeout</div>'
+            '<div style="font-size:15px;font-weight:700">24 hours</div>'
+            '<div style="font-size:11px;color:#BFDBFE;margin-top:4px">Via SESSION_TIMEOUT_HOURS env</div>'
+            '</div>'
+
+            '</div>'
+
+            '<div style="margin-top:16px;padding-top:14px;'
+            'border-top:1px solid rgba(255,255,255,0.12);font-size:12px;color:#BFDBFE">'
+            'Roles: Admin > Plant Manager > Maintenance Engineer > Operator'
+            ' | Password reset tokens expire in 1 hour'
+            ' | All writes are audit-logged'
+            '</div>'
+
+            '</div>',
+            unsafe_allow_html=True,
+        )

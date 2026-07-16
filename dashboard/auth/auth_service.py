@@ -4,7 +4,7 @@ Works with SQLite locally and Supabase in cloud.
 All state is stored in st.session_state.
 """
 from __future__ import annotations
-import os, sys
+import os, sys, time
 import streamlit as st
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -126,6 +126,58 @@ class AuthService:
     def require_auth(self) -> bool:
         """Returns True if user is authenticated; used as guard in app.py."""
         return self.is_authenticated()
+
+    # ── Role & Permission helpers (delegate to rbac module) ────────
+
+    def user_role(self) -> str:
+        """Return the current user's role string."""
+        return self.current_user().get("role", "Operator")
+
+    def has_permission(self, permission: str) -> bool:
+        """Delegate to rbac.has_permission — avoids circular imports in views."""
+        try:
+            from auth.rbac import has_permission
+            return has_permission(permission)
+        except Exception:
+            return False
+
+    def is_admin(self) -> bool:
+        return self.user_role() == "Admin"
+
+    def is_plant_manager_or_above(self) -> bool:
+        return self.user_role() in {"Admin", "Plant Manager"}
+
+    # ── Session timeout ────────────────────────────────────────────
+
+    def touch_session(self) -> None:
+        """Record current time as the last activity timestamp."""
+        st.session_state["_session_last_active"] = time.time()
+
+    def session_is_expired(self) -> bool:
+        """Return True if the session has exceeded the configured timeout."""
+        last = st.session_state.get("_session_last_active")
+        if last is None:
+            return False
+        timeout_seconds = settings.session_timeout_hours * 3600
+        return (time.time() - last) > timeout_seconds
+
+    def enforce_session_timeout(self) -> None:
+        """
+        Call this at the top of every authenticated page.
+        If the session has expired, log the user out and trigger a rerun.
+        """
+        if self.is_authenticated() and self.session_is_expired():
+            uid = self.user_id()
+            try:
+                from database.db_client import db as _db
+                _db.log_audit(uid, "session_timeout", "Auto-logout after inactivity")
+            except Exception:
+                pass
+            self.logout()
+            st.warning("⏱️ Your session has expired. Please sign in again.")
+            st.rerun()
+        else:
+            self.touch_session()
 
 
 auth = AuthService()

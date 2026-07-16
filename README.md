@@ -102,10 +102,25 @@ This project implements a **Hybrid AI-Based Predictive Maintenance Framework** t
 - Cost & ROI calculator
 - Maintenance Gantt timeline
 
-### 🔐 Authentication
-- Demo mode (zero-setup)
-- Supabase Auth integration (production)
-- Role-based access: Admin / Plant Manager / Engineer / Operator
+### 🔐 Authentication & Security
+| Feature | Status | Notes |
+|---|---|---|
+| Demo Login | ✅ | `demo@industrialmaint.ai` / `Demo@1234` |
+| User Registration | ✅ | Full name, company, factory, department, role |
+| Password Hashing | ✅ | SHA-256 with secret salt |
+| Forgot Password | ✅ | Token-based reset (1hr expiry) |
+| Change Password | ✅ | Via user profile (current pw required) |
+| Session Timeout | ✅ | Configurable via `SESSION_TIMEOUT_HOURS` env |
+| Audit Logging | ✅ | Every login, logout, reset, profile change |
+| Supabase Auth | 🔄 | Ready — set `SUPABASE_URL` to activate |
+
+#### 🛡️ Role-Based Access Control (RBAC)
+| Role | Dashboard | Predictions | Reports | Cost Analysis | Settings | Admin Panel |
+|---|---|---|---|---|---|---|
+| **Admin** | ✅ | ✅ | ✅ | ✅ | ✅ Edit | ✅ |
+| **Plant Manager** | ✅ | ✅ | ✅ Export | ✅ | ✅ Edit | ❌ |
+| **Maintenance Engineer** | ✅ | ✅ | ✅ View | ❌ | ✅ View | ❌ |
+| **Operator** | ✅ | ❌ | ❌ | ❌ | ✅ View | ❌ |
 
 ---
 
@@ -115,13 +130,15 @@ This project implements a **Hybrid AI-Based Predictive Maintenance Framework** t
 Hybrid-AI-Based-Predictive-Maintenance-Framework/
 │
 ├── dashboard/                  # Streamlit enterprise frontend
-│   ├── app.py                  # Entry point with auth gate
-│   ├── components.py           # Reusable UI component library
+│   ├── app.py                  # Entry point, auth gate, session timeout
+│   ├── components.py           # Reusable UI component library (v4)
 │   ├── style.css               # Premium CSS design system
 │   ├── api_client.py           # Frontend ↔ backend bridge
 │   ├── auth/                   # Authentication service
+│   │   ├── auth_service.py     # Login, register, logout, session mgmt
+│   │   └── rbac.py             # Role-based access control & permissions
 │   ├── config/                 # App configuration
-│   ├── database/               # DB client (SQLite/Supabase)
+│   ├── database/               # DB client (SQLite/Supabase dual-mode)
 │   ├── utils/                  # PDF generator, helpers
 │   └── views/                  # Page modules
 │       ├── dashboard.py        # Operations control center
@@ -130,8 +147,11 @@ Hybrid-AI-Based-Predictive-Maintenance-Framework/
 │       ├── maintenance.py      # Maintenance scheduler
 │       ├── reports.py          # Reports & PDF export
 │       ├── cost_analysis.py    # ROI calculator
-│       ├── profile.py          # User profile
-│       └── settings.py         # Platform settings
+│       ├── profile.py          # User profile + change password
+│       ├── settings.py         # Platform settings (RBAC-aware)
+│       ├── login.py            # Enterprise login page
+│       ├── register.py         # User registration
+│       └── forgot_password.py  # Token-based password reset
 │
 ├── services/                   # ML inference services
 │   ├── prediction_service.py   # Main orchestrator
