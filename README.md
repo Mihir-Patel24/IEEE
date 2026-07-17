@@ -102,6 +102,16 @@ This project implements a **Hybrid AI-Based Predictive Maintenance Framework** t
 - Cost & ROI calculator
 - Maintenance Gantt timeline
 
+### 🚢 Deployment & Containerization (Phase 11)
+| Feature | Notes |
+|---|---|
+| Streamlit Cloud | Ready for 1-click SaaS deployment with `secrets.toml` |
+| Dockerized | Production-ready `Dockerfile` providing isolated Python 3.11 environment |
+| Docker Compose | Multi-container ready deployment via `docker-compose.yml` |
+| Smoke Tests | CI/CD automation script (`smoke_test.py`) to validate module integrity |
+| Environment Config | All keys and secrets secured via ENV variables|
+| Documentation | Extensive step-by-step guides inside `DEPLOYMENT.md` |
+
 ### 🚀 Digital Twin & OEE Dashboard (Phase 6)
 | Feature | Notes |
 |---|---|
