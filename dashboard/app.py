@@ -174,6 +174,7 @@ api_lbl = "API Online" if api_ok else "Local Mode"
 PAGES_ALL = [
     ("Dashboard",        "📊", "OVERVIEW"),
     ("Machine Health",   "🏭", "OVERVIEW"),
+    ("Digital Twin",     "🚀", "OVERVIEW"),
     ("Predictions",      "🔮", "ANALYSIS"),
     ("Machine Registry", "🗂", "ANALYSIS"),
     ("Maintenance",      "🔧", "OPERATIONS"),
@@ -342,6 +343,7 @@ n_alerts = len(st.session_state.alerts)
 page_sub = {
     "Dashboard":        "Operations Control Center",
     "Machine Health":   "Fleet Status & Sensor Monitoring",
+    "Digital Twin":     "Live Simulator & OEE Dashboard",
     "Predictions":      "AI-Powered Failure Prediction Engine",
     "Machine Registry": "Fleet Registry & Machine Management",
     "Maintenance":      "Maintenance Planning & Scheduling",
@@ -379,6 +381,8 @@ if   p == "Dashboard":
     from views import dashboard; dashboard.render()
 elif p == "Machine Health":
     from views import machine_health; machine_health.render()
+elif p == "Digital Twin":
+    from views import digital_twin; digital_twin.render()
 elif p == "Predictions":
     from views import predictions; predictions.render()
 elif p == "Machine Registry":

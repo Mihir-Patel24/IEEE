@@ -102,6 +102,17 @@ This project implements a **Hybrid AI-Based Predictive Maintenance Framework** t
 - Cost & ROI calculator
 - Maintenance Gantt timeline
 
+### 🚀 Digital Twin & OEE Dashboard (Phase 6)
+| Feature | Notes |
+|---|---|
+| Live telemetry simulator | Auto-refreshing sensor data (vibration, temp, power) |
+| OEE calculation | Live Availability, Performance, Quality, and OEE% |
+| Reliability metrics | MTBF, MTTR, Risk-Adjusted OEE, Health Index |
+| Lifetime forecast | Safe / Warning / Critical operational windows |
+| Dynamic degradation | Simulates machine wear increasing over time |
+| Component health | Spindle, Tool, Motor, Cooling, Power status |
+| Custom indicators | Half-donut gauges for all OEE factors |
+
 ### 🔔 Notifications & Alert Centre (Phase 5)
 | Feature | Notes |
 |---|---|
@@ -189,22 +200,24 @@ Hybrid-AI-Based-Predictive-Maintenance-Framework/
 │   ├── utils/                  # PDF generator, helpers
 │   └── views/                  # Page modules
 │       ├── dashboard.py        # Operations control center
-│       ├── predictions.py      # AI prediction engine UI
-│       ├── machine_health.py   # Digital twin fleet view
-│       ├── maintenance.py      # Maintenance scheduler
-│       ├── reports.py          # Reports & PDF export
-│       ├── cost_analysis.py    # ROI calculator
+│       ├── machine_health.py   # Fleet Status
+│       ├── digital_twin.py     # Live Simulator & OEE (Phase 6)
+│       ├── predictions.py      # Core AI inference view
+│       ├── machine_registry.py # Fleet Registry CRUD (Phase 3)
+│       ├── alert_centre.py     # Notification & Alert Centre (Phase 5)
+│       ├── maintenance.py      # Scheduling + Gantt
+│       ├── reports.py          # Prediction history + Analytics
+│       ├── cost_analysis.py    # Financial ROI impact
 │       ├── profile.py          # User profile + change password
 │       ├── settings.py         # Platform settings (RBAC-aware)
 │       ├── login.py            # Enterprise login page
 │       ├── register.py         # User registration
-│       ├── forgot_password.py  # Token-based password reset
-│       ├── machine_registry.py # Fleet Registry CRUD (Phase 3)
-│       └── alert_centre.py     # Notification & Alert Centre (Phase 5)
+│       └── forgot_password.py  # Token-based password reset
 │
 ├── utils/                      # Shared utilities
 │   ├── pdf_generator.py        # PDF/TXT report generation
-│   └── email_notifier.py       # SMTP email scaffold (Phase 5)
+│   ├── email_notifier.py       # SMTP email scaffold (Phase 5)
+│   └── oee_calculator.py       # OEE & Reliability metrics (Phase 6)
 │
 ├── database/                   # Schema & migrations
 │   └── supabase_schema.sql     # PostgreSQL schema with RLS (Phase 3)
