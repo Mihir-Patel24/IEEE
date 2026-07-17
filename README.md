@@ -102,6 +102,20 @@ This project implements a **Hybrid AI-Based Predictive Maintenance Framework** t
 - Cost & ROI calculator
 - Maintenance Gantt timeline
 
+### 🔔 Notifications & Alert Centre (Phase 5)
+| Feature | Notes |
+|---|---|
+| Alert Centre page | Persistent DB-backed alert history |
+| Per-alert mark-as-read | Individual expand/read state per card |
+| Mark all read | Bulk clear unread count |
+| Level + machine filter | Critical / Warning / Info + Machine ID filter |
+| Sidebar unread badge | Live DB count, clickable → Alert Centre |
+| SMTP email scaffold | Non-blocking, configured via env vars |
+| Critical prediction email | Auto-fires on failure risk ≥ 60% |
+| Weekly summary email | `send_weekly_summary()` helper ready |
+| Test email button | Send test email from Alert Centre UI |
+| Admin audit log | Last 15 audit entries (Admin role only) |
+
 ### 📊 Reports & Analytics (Phase 4)
 | Feature | Notes |
 |---|---|
@@ -185,7 +199,12 @@ Hybrid-AI-Based-Predictive-Maintenance-Framework/
 │       ├── login.py            # Enterprise login page
 │       ├── register.py         # User registration
 │       ├── forgot_password.py  # Token-based password reset
-│       └── machine_registry.py # Fleet Registry CRUD (Phase 3)
+│       ├── machine_registry.py # Fleet Registry CRUD (Phase 3)
+│       └── alert_centre.py     # Notification & Alert Centre (Phase 5)
+│
+├── utils/                      # Shared utilities
+│   ├── pdf_generator.py        # PDF/TXT report generation
+│   └── email_notifier.py       # SMTP email scaffold (Phase 5)
 │
 ├── database/                   # Schema & migrations
 │   └── supabase_schema.sql     # PostgreSQL schema with RLS (Phase 3)

@@ -460,6 +460,16 @@ class DatabaseClient:
         conn.commit()
         conn.close()
 
+    def mark_alert_read(self, alert_id: str) -> None:
+        """Mark a single alert as read by its primary key."""
+        if _supabase:
+            _supabase.table("alerts").update({"is_read": True}).eq("id", alert_id).execute()
+            return
+        conn = _get_conn()
+        conn.execute("UPDATE alerts SET is_read=1 WHERE id=?", (alert_id,))
+        conn.commit()
+        conn.close()
+
     def get_db_stats(self, user_id: str) -> dict:
         """Return row counts for dashboard DB health indicator."""
         return {

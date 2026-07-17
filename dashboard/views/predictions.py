@@ -475,6 +475,19 @@ def render():
                         )
                 except Exception:
                     pass
+                # Send email notification if configured
+                try:
+                    _cfg = st.session_state.get("settings", {})
+                    if _cfg.get("email_alerts", True):
+                        from utils.email_notifier import send_critical_alert
+                        send_critical_alert(
+                            machine_id=machine_id,
+                            risk=float(result.get("failure_risk", 0)),
+                            failure_type=str(result.get("failure_type", "")),
+                            to_email=_cfg.get("alert_email") or None,
+                        )
+                except Exception:
+                    pass  # Never block the UI for email failures
             st.rerun()
 
     if reset:

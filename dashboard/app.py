@@ -179,6 +179,7 @@ PAGES_ALL = [
     ("Maintenance",      "🔧", "OPERATIONS"),
     ("Reports",          "📋", "OPERATIONS"),
     ("Cost Analysis",    "💰", "OPERATIONS"),
+    ("Alert Centre",     "🔔", "ACCOUNT"),
     ("Profile",          "👤", "ACCOUNT"),
     ("Settings",         "⚙️",  "ACCOUNT"),
 ]
@@ -255,16 +256,30 @@ with st.sidebar:
             st.session_state.page = name_pg
             st.rerun()
 
-    # Alerts count
-    n_crit = sum(1 for a in st.session_state.alerts if a.get("level") == "critical")
-    if n_crit:
-        st.markdown(
-            f'<div style="margin:12px 12px 0;background:#fef2f2;border:1px solid #fecaca;'
-            f'border-radius:6px;padding:8px 12px;font-size:0.72rem;'
-            f'color:#dc2626;font-weight:700;display:flex;align-items:center;gap:6px">'
-            f'<span>🔴</span>{n_crit} Critical Alert{"s" if n_crit > 1 else ""}</div>',
-            unsafe_allow_html=True,
-        )
+    # Alerts badge — DB-backed unread count
+    try:
+        from database.db_client import db as _db
+        _uid_badge = auth.user_id()
+        if _uid_badge and _db:
+            _counts = _db.get_alert_counts(_uid_badge)
+            _unread = _counts.get("unread", 0)
+            _critical_db = _counts.get("critical", 0)
+            st.session_state["_alert_unread_count"] = _unread
+        else:
+            _unread = st.session_state.get("_alert_unread_count", 0)
+            _critical_db = sum(1 for a in st.session_state.alerts if a.get("level") == "critical")
+    except Exception:
+        _unread = 0
+        _critical_db = sum(1 for a in st.session_state.alerts if a.get("level") == "critical")
+
+    if _unread or _critical_db:
+        _badge_color = "#DC2626" if _critical_db else "#2563EB"
+        _badge_label = (f"{_critical_db} Critical" if _critical_db
+                        else f"{_unread} Unread")
+        if st.button(f"🔔 {_badge_label}", key="nav_alert_badge",
+                     use_container_width=True, type="secondary"):
+            st.session_state.page = "Alert Centre"
+            st.rerun()
 
     # Spacer to push user to bottom
     st.markdown('<div style="flex:1;min-height:40px"></div>', unsafe_allow_html=True)
@@ -332,6 +347,7 @@ page_sub = {
     "Maintenance":      "Maintenance Planning & Scheduling",
     "Reports":          "Prediction History & Analytics",
     "Cost Analysis":    "Business Impact & ROI Calculator",
+    "Alert Centre":     "Notification Hub & Alert History",
     "Profile":          "User Account & Activity",
     "Settings":         "System Configuration",
 }.get(st.session_state.page, "")
@@ -373,6 +389,8 @@ elif p == "Reports":
     from views import reports; reports.render()
 elif p == "Cost Analysis":
     from views import cost_analysis; cost_analysis.render()
+elif p == "Alert Centre":
+    from views import alert_centre; alert_centre.render()
 elif p == "Profile":
     from views import profile; profile.render()
 elif p == "Settings":
