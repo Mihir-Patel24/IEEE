@@ -10,7 +10,7 @@
 
 **An enterprise-grade AI platform that fuses NASA Tool Wear predictions with AI4I 2020 failure detection through a custom Decision Fusion Layer — deployed as a production Streamlit SaaS dashboard.**
 
-[Live Demo](#) · [Architecture](#architecture) · [Setup](#setup) · [Features](#features)
+[Live Demo](#https://industrialmaint-yjxrxcplp2cghgex9clq3m.streamlit.app/) · [Architecture](#architecture) · [Setup](#setup) · [Features](#features)
 
 </div>
 
